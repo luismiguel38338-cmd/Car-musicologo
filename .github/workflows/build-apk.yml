@@ -1,0 +1,89 @@
+name: Compilar Web & Android APK
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-web-and-pwa:
+    name: Compilar Aplicación Web y PWA
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar Código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar Dependencias
+        run: npm ci || npm install
+
+      - name: Verificar Tipos TypeScript
+        run: npm run lint
+
+      - name: Compilar Distribución de Producción
+        run: npm run build
+
+      - name: Subir Artefactos de la App Web
+        uses: actions/upload-artifact@v4
+        with:
+          name: radio-musicologos-web-build
+          path: dist/
+          retention-days: 14
+
+  build-android-apk:
+    name: Compilar APK Android
+    runs-on: ubuntu-latest
+    needs: build-web-and-pwa
+    steps:
+      - name: Descargar Código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Configurar Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+
+      - name: Instalar Dependencias
+        run: npm ci || npm install
+
+      - name: Compilar Web
+        run: npm run build
+
+      - name: Inicializar Capacitor Android
+        run: |
+          npx cap add android || true
+          npx cap sync android
+
+      - name: Compilar APK con Gradle
+        run: |
+          if [ -d "android" ]; then
+            cd android
+            chmod +x gradlew
+            ./gradlew assembleDebug --no-daemon
+          else
+            echo "Directorio android no encontrado, generando paquete web compilado."
+          fi
+
+      - name: Subir Archivo APK Compilado
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: radio-musicologos-android-apk
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            dist/
+          retention-days: 30

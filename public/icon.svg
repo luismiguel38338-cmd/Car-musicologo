@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1c1f26"/>
+      <stop offset="70%" stop-color="#0a0b0d"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+
+    <!-- Outer Chrome Ring -->
+    <linearGradient id="chromeRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff3b30"/>
+      <stop offset="25%" stop-color="#ff9500"/>
+      <stop offset="50%" stop-color="#ffd60a"/>
+      <stop offset="75%" stop-color="#007aff"/>
+      <stop offset="100%" stop-color="#ff2d55"/>
+    </linearGradient>
+
+    <!-- Subwoofer Cone Gradient -->
+    <radialGradient id="coneGrad" cx="42%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#2a2e39"/>
+      <stop offset="45%" stop-color="#14161b"/>
+      <stop offset="90%" stop-color="#08090b"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+
+    <!-- Dust Cap Highlight -->
+    <radialGradient id="capGrad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#4a5264"/>
+      <stop offset="35%" stop-color="#20242c"/>
+      <stop offset="100%" stop-color="#090a0d"/>
+    </radialGradient>
+
+    <!-- Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Deep Background -->
+  <rect width="512" height="512" rx="105" fill="url(#bgGrad)"/>
+
+  <!-- Outer Neon Trim -->
+  <circle cx="256" cy="256" r="225" fill="none" stroke="url(#chromeRing)" stroke-width="8" filter="url(#glow)" opacity="0.9"/>
+  <circle cx="256" cy="256" r="215" fill="none" stroke="#22252c" stroke-width="4"/>
+
+  <!-- Speaker Basket / Chassis Bolted Rim -->
+  <circle cx="256" cy="256" r="200" fill="#111317" stroke="#333842" stroke-width="2"/>
+
+  <!-- 8 Bolts -->
+  <circle cx="256" cy="65" r="6" fill="#88909e"/>
+  <circle cx="256" cy="447" r="6" fill="#88909e"/>
+  <circle cx="65" cy="256" r="6" fill="#88909e"/>
+  <circle cx="447" cy="256" r="6" fill="#88909e"/>
+  <circle cx="121" cy="121" r="6" fill="#88909e"/>
+  <circle cx="391" cy="121" r="6" fill="#88909e"/>
+  <circle cx="121" cy="391" r="6" fill="#88909e"/>
+  <circle cx="391" cy="391" r="6" fill="#88909e"/>
+
+  <!-- Subwoofer Surround Roll (Rubber edge) -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#1d2027" stroke-width="26"/>
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#ff3b30" stroke-width="2" opacity="0.6"/>
+
+  <!-- Cone Body -->
+  <circle cx="256" cy="256" r="162" fill="url(#coneGrad)"/>
+
+  <!-- Equalizer Arc Visualizer Ribs -->
+  <g opacity="0.4" stroke="#ff9500" stroke-width="2" fill="none">
+    <circle cx="256" cy="256" r="140" stroke-dasharray="8 6"/>
+    <circle cx="256" cy="256" r="118" stroke-dasharray="12 8"/>
+    <circle cx="256" cy="256" r="96" stroke-dasharray="6 10"/>
+  </g>
+
+  <!-- Large Center Dust Cap -->
+  <circle cx="256" cy="256" r="76" fill="url(#capGrad)" stroke="#ff2d55" stroke-width="3" filter="url(#glow)"/>
+
+  <!-- Center Logo Emblem Icon (Audio Waves + M) -->
+  <path d="M 216 280 L 216 232 L 236 262 L 256 242 L 276 262 L 296 232 L 296 280" fill="none" stroke="#ffd60a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Equalizer Bars on Center -->
+  <rect x="238" y="210" width="5" height="16" rx="2" fill="#30d158" filter="url(#glow)"/>
+  <rect x="247" y="202" width="5" height="24" rx="2" fill="#ffd60a" filter="url(#glow)"/>
+  <rect x="256" y="196" width="5" height="30" rx="2" fill="#ff9500" filter="url(#glow)"/>
+  <rect x="265" y="202" width="5" height="24" rx="2" fill="#ffd60a" filter="url(#glow)"/>
+  <rect x="274" y="210" width="5" height="16" rx="2" fill="#30d158" filter="url(#glow)"/>
+
+  <!-- Circular Brand Text Around Center -->
+  <text x="256" y="365" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="28" fill="#ffffff" text-anchor="middle" letter-spacing="4" filter="url(#glow)">
+    MUSICÓLOGOS
+  </text>
+  <text x="256" y="392" font-family="Arial, sans-serif" font-weight="800" font-size="15" fill="#38bdf8" text-anchor="middle" letter-spacing="6">
+    CAR AUDIO PRO
+  </text>
+</svg>

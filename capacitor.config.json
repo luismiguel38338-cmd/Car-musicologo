@@ -1,0 +1,13 @@
+{
+  "appId": "com.musicologos.caraudio",
+  "appName": "Radio Musicólogos",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#000000",
+    "allowMixedContent": true
+  }
+}

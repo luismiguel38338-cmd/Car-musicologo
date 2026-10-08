@@ -1,0 +1,6 @@
+{
+  "name": "Radio Musicólogos · Pioneer DEH-4250BT",
+  "description": "Simulador interactivo de car audio Pioneer DEH-4250BT con chucheros animados, kitipos, ecualizadores paramétricos, voltímetro digital y música de Los Musicólogos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
