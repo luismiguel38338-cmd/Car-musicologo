@@ -1,95 +1,111 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Luis Miguel Musicólogo</title>
+  <desc id="desc">Logo icon con corona, bocinas, letras 3D y texto Musicólogo.</desc>
   <defs>
-    <!-- Background Gradient -->
-    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#1c1f26"/>
-      <stop offset="70%" stop-color="#0a0b0d"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0d12"/>
+      <stop offset="50%" stop-color="#05070a"/>
       <stop offset="100%" stop-color="#000000"/>
-    </radialGradient>
-
-    <!-- Outer Chrome Ring -->
-    <linearGradient id="chromeRing" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff3b30"/>
-      <stop offset="25%" stop-color="#ff9500"/>
-      <stop offset="50%" stop-color="#ffd60a"/>
-      <stop offset="75%" stop-color="#007aff"/>
-      <stop offset="100%" stop-color="#ff2d55"/>
     </linearGradient>
-
-    <!-- Subwoofer Cone Gradient -->
-    <radialGradient id="coneGrad" cx="42%" cy="42%" r="58%">
-      <stop offset="0%" stop-color="#2a2e39"/>
-      <stop offset="45%" stop-color="#14161b"/>
-      <stop offset="90%" stop-color="#08090b"/>
-      <stop offset="100%" stop-color="#000000"/>
+    <radialGradient id="metal" cx="50%" cy="35%" r="68%">
+      <stop offset="0%" stop-color="#f3f7ff"/>
+      <stop offset="18%" stop-color="#bec8d9"/>
+      <stop offset="38%" stop-color="#697787"/>
+      <stop offset="58%" stop-color="#dfeafc"/>
+      <stop offset="78%" stop-color="#6e7785"/>
+      <stop offset="100%" stop-color="#1f252d"/>
     </radialGradient>
-
-    <!-- Dust Cap Highlight -->
-    <radialGradient id="capGrad" cx="35%" cy="35%" r="65%">
-      <stop offset="0%" stop-color="#4a5264"/>
-      <stop offset="35%" stop-color="#20242c"/>
-      <stop offset="100%" stop-color="#090a0d"/>
-    </radialGradient>
-
-    <!-- Glow Filter -->
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="6" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    <linearGradient id="chrome" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="20%" stop-color="#d8e3f5"/>
+      <stop offset="40%" stop-color="#8ea0b9"/>
+      <stop offset="60%" stop-color="#eef5ff"/>
+      <stop offset="80%" stop-color="#a6b4c8"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="blueGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#62d7ff"/>
+      <stop offset="30%" stop-color="#1e9eff"/>
+      <stop offset="60%" stop-color="#0c6dff"/>
+      <stop offset="100%" stop-color="#0039b8"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3b3f45"/>
+      <stop offset="25%" stop-color="#c8d0dc"/>
+      <stop offset="50%" stop-color="#1d2126"/>
+      <stop offset="75%" stop-color="#dfe7f5"/>
+      <stop offset="100%" stop-color="#3b4047"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.55"/>
+    </filter>
+    <filter id="blueGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#1cb7ff" flood-opacity="0.9"/>
     </filter>
   </defs>
 
-  <!-- Deep Background -->
-  <rect width="512" height="512" rx="105" fill="url(#bgGrad)"/>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
 
-  <!-- Outer Neon Trim -->
-  <circle cx="256" cy="256" r="225" fill="none" stroke="url(#chromeRing)" stroke-width="8" filter="url(#glow)" opacity="0.9"/>
-  <circle cx="256" cy="256" r="215" fill="none" stroke="#22252c" stroke-width="4"/>
+  <g filter="url(#shadow)">
+    <g transform="translate(100 100)">
+      <path d="M400 70 L470 120 L540 90 L610 150 L690 120 L740 180 L750 318 L720 520 L640 630 L612 660 L567 630 L520 670 L470 635 L420 670 L370 630 L336 660 L298 628 L260 520 L230 318 L240 180 L290 150 L360 87 Z" fill="url(#metal)" stroke="#d9eaff" stroke-width="10"/>
 
-  <!-- Speaker Basket / Chassis Bolted Rim -->
-  <circle cx="256" cy="256" r="200" fill="#111317" stroke="#333842" stroke-width="2"/>
+      <path d="M260 200 L322 200 L354 248 L394 194 L430 248 L470 180 L528 248 L570 194 L610 248 L646 200 L710 200 L740 260 L700 300 L642 318 L642 430 L652 480 L626 520 L600 532 L598 570 L520 588 L448 570 L446 532 L420 520 L390 480 L398 318 L344 300 L286 260 Z" fill="#0f141a" opacity="0.85"/>
 
-  <!-- 8 Bolts -->
-  <circle cx="256" cy="65" r="6" fill="#88909e"/>
-  <circle cx="256" cy="447" r="6" fill="#88909e"/>
-  <circle cx="65" cy="256" r="6" fill="#88909e"/>
-  <circle cx="447" cy="256" r="6" fill="#88909e"/>
-  <circle cx="121" cy="121" r="6" fill="#88909e"/>
-  <circle cx="391" cy="121" r="6" fill="#88909e"/>
-  <circle cx="121" cy="391" r="6" fill="#88909e"/>
-  <circle cx="391" cy="391" r="6" fill="#88909e"/>
+      <g opacity="0.96">
+        <circle cx="118" cy="518" r="118" fill="url(#steel)" stroke="#cfe5ff" stroke-width="14"/>
+        <circle cx="118" cy="518" r="72" fill="#090d13" stroke="#0db8ff" stroke-width="12"/>
+        <circle cx="118" cy="518" r="28" fill="#0a0d11" stroke="#9dc9ff" stroke-width="8"/>
+        <circle cx="678" cy="520" r="118" fill="url(#steel)" stroke="#cfe5ff" stroke-width="14"/>
+        <circle cx="678" cy="520" r="72" fill="#090d13" stroke="#0db8ff" stroke-width="12"/>
+        <circle cx="678" cy="520" r="28" fill="#0a0d11" stroke="#9dc9ff" stroke-width="8"/>
+      </g>
 
-  <!-- Subwoofer Surround Roll (Rubber edge) -->
-  <circle cx="256" cy="256" r="180" fill="none" stroke="#1d2027" stroke-width="26"/>
-  <circle cx="256" cy="256" r="180" fill="none" stroke="#ff3b30" stroke-width="2" opacity="0.6"/>
+      <g opacity="0.9">
+        <circle cx="116" cy="514" r="16" fill="#0ea5ff"/>
+        <circle cx="154" cy="514" r="16" fill="#0ea5ff"/>
+        <circle cx="88" cy="514" r="16" fill="#0ea5ff"/>
+        <circle cx="680" cy="522" r="16" fill="#0ea5ff"/>
+        <circle cx="718" cy="522" r="16" fill="#0ea5ff"/>
+        <circle cx="652" cy="522" r="16" fill="#0ea5ff"/>
+      </g>
 
-  <!-- Cone Body -->
-  <circle cx="256" cy="256" r="162" fill="url(#coneGrad)"/>
+      <g transform="translate(0 0)">
+        <path d="M220 206 L265 206 L312 112 L365 182 L425 88 L480 170 L605 170 L660 96 L710 188 L764 106 L804 206 L848 206 L770 310 L740 270 L687 312 L622 256 L533 322 L480 268 L426 322 L340 256 L278 312 L240 270 L210 310 Z" fill="url(#chrome)" stroke="#eff6ff" stroke-width="10"/>
+        <circle cx="312" cy="104" r="16" fill="#0bb3ff"/>
+        <circle cx="425" cy="74" r="16" fill="#0bb3ff"/>
+        <circle cx="538" cy="104" r="16" fill="#0bb3ff"/>
+        <circle cx="659" cy="96" r="16" fill="#0bb3ff"/>
+        <circle cx="776" cy="120" r="16" fill="#0bb3ff"/>
+        <circle cx="480" cy="42" r="18" fill="#0bb3ff"/>
+      </g>
 
-  <!-- Equalizer Arc Visualizer Ribs -->
-  <g opacity="0.4" stroke="#ff9500" stroke-width="2" fill="none">
-    <circle cx="256" cy="256" r="140" stroke-dasharray="8 6"/>
-    <circle cx="256" cy="256" r="118" stroke-dasharray="12 8"/>
-    <circle cx="256" cy="256" r="96" stroke-dasharray="6 10"/>
+      <g filter="url(#blueGlowFilter)">
+        <text x="476" y="460" text-anchor="middle" font-size="238" font-family="Impact, Arial Black, sans-serif" font-weight="900" letter-spacing="-12" fill="#dfeaf8" stroke="#a9bacd" stroke-width="8">LM</text>
+        <text x="476" y="460" text-anchor="middle" font-size="228" font-family="Impact, Arial Black, sans-serif" font-weight="900" letter-spacing="-12" fill="url(#blueGlow)" opacity="0.9">LM</text>
+      </g>
+
+      <g transform="translate(0 26)" filter="url(#blueGlowFilter)">
+        <text x="476" y="645" text-anchor="middle" font-size="168" font-family="Impact, Arial Black, sans-serif" font-weight="900" letter-spacing="-8" fill="#dfeaf8" stroke="#94aac2" stroke-width="12">LUIS MIGUEL</text>
+      </g>
+
+      <g filter="url(#blueGlowFilter)">
+        <text x="476" y="760" text-anchor="middle" font-size="112" font-family="Impact, Arial Black, sans-serif" font-weight="900" letter-spacing="10" fill="#1fb6ff" stroke="#dfeaf8" stroke-width="10">MUSICÓLOGO</text>
+      </g>
+
+      <g transform="translate(0 0)">
+        <path d="M256 770 Q478 808 690 770" fill="none" stroke="#0db7ff" stroke-width="14" stroke-linecap="round"/>
+        <rect x="240" y="770" width="18" height="64" rx="8" fill="#1db1ff"/>
+        <rect x="280" y="770" width="18" height="92" rx="8" fill="#1db1ff"/>
+        <rect x="320" y="770" width="18" height="128" rx="8" fill="#1db1ff"/>
+        <rect x="360" y="770" width="18" height="102" rx="8" fill="#1db1ff"/>
+        <rect x="400" y="770" width="18" height="86" rx="8" fill="#1db1ff"/>
+        <rect x="440" y="770" width="18" height="116" rx="8" fill="#1db1ff"/>
+        <rect x="480" y="770" width="18" height="90" rx="8" fill="#1db1ff"/>
+        <rect x="520" y="770" width="18" height="112" rx="8" fill="#1db1ff"/>
+        <rect x="560" y="770" width="18" height="100" rx="8" fill="#1db1ff"/>
+        <rect x="600" y="770" width="18" height="72" rx="8" fill="#1db1ff"/>
+      </g>
+    </g>
   </g>
-
-  <!-- Large Center Dust Cap -->
-  <circle cx="256" cy="256" r="76" fill="url(#capGrad)" stroke="#ff2d55" stroke-width="3" filter="url(#glow)"/>
-
-  <!-- Center Logo Emblem Icon (Audio Waves + M) -->
-  <path d="M 216 280 L 216 232 L 236 262 L 256 242 L 276 262 L 296 232 L 296 280" fill="none" stroke="#ffd60a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
-
-  <!-- Equalizer Bars on Center -->
-  <rect x="238" y="210" width="5" height="16" rx="2" fill="#30d158" filter="url(#glow)"/>
-  <rect x="247" y="202" width="5" height="24" rx="2" fill="#ffd60a" filter="url(#glow)"/>
-  <rect x="256" y="196" width="5" height="30" rx="2" fill="#ff9500" filter="url(#glow)"/>
-  <rect x="265" y="202" width="5" height="24" rx="2" fill="#ffd60a" filter="url(#glow)"/>
-  <rect x="274" y="210" width="5" height="16" rx="2" fill="#30d158" filter="url(#glow)"/>
-
-  <!-- Circular Brand Text Around Center -->
-  <text x="256" y="365" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="28" fill="#ffffff" text-anchor="middle" letter-spacing="4" filter="url(#glow)">
-    MUSICÓLOGOS
-  </text>
-  <text x="256" y="392" font-family="Arial, sans-serif" font-weight="800" font-size="15" fill="#38bdf8" text-anchor="middle" letter-spacing="6">
-    CAR AUDIO PRO
-  </text>
 </svg>
