@@ -4,13 +4,14 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { PlaylistFolder, EqUnitState, Track } from './types/radio';
+import { PlaylistFolder, EqUnitState, Track, SpeakerSize, TweeterType } from './types/radio';
 import { MODELS, COLORS } from './utils/models';
 import { audioEngine, EQ_PRESETS } from './utils/audioEngine';
 import { LoadingScreen } from './components/LoadingScreen';
 import { BatteryVoltMeter } from './components/BatteryVoltMeter';
 import { EqualizerStack } from './components/EqualizerStack';
 import { SpeakerChuchero } from './components/SpeakerChuchero';
+import { MusicologosCooler } from './components/MusicologosCooler';
 import { RadioFaceplate } from './components/RadioFaceplate';
 import { QuickToolbar } from './components/QuickToolbar';
 import { DjSoundboard } from './components/DjSoundboard';
@@ -125,7 +126,8 @@ export default function App() {
   const [currentColorIndex, setCurrentColorIndex] = useState(0); // Blue
   const [currentCaseColor, setCurrentCaseColor] = useState('#1c1d21'); // Sleek Carbon by default
   const [currentSpeakerColor, setCurrentSpeakerColor] = useState('#0f70b7');
-  const [speakerSize, setSpeakerSize] = useState<6 | 8 | 10 | 12>(6);
+  const [speakerSize, setSpeakerSize] = useState<SpeakerSize>(6);
+  const [tweeterType, setTweeterType] = useState<TweeterType>('bala');
   const [currentModelId, setCurrentModelId] = useState('orig');
   const [is14Volt, setIs14Volt] = useState(false);
 
@@ -703,7 +705,28 @@ export default function App() {
       />
 
       {/* Chuchero Speaker Box with animated Woofers */}
-      <SpeakerChuchero size={speakerSize} color={currentSpeakerColor} />
+      <SpeakerChuchero size={speakerSize} color={currentSpeakerColor} tweeterType={tweeterType} />
+
+      {/* Musicólogos cooler with the same playback-reactive speaker setup */}
+      <MusicologosCooler
+        size={speakerSize}
+        color={currentSpeakerColor}
+        tweeterType={tweeterType}
+        isPlaying={isPlaying}
+        onSizeChange={(size) => {
+          setSpeakerSize(size);
+          showOverlay(`CHUCHERO ${size}"`);
+        }}
+        onTweeterTypeChange={(type) => {
+          setTweeterType(type);
+          const labels: Record<TweeterType, string> = {
+            bala: 'TWEETER BALA',
+            fenolico: 'DRIVER FENÓLICO',
+            super: 'SUPER TWEETER',
+          };
+          showOverlay(labels[type]);
+        }}
+      />
 
       {/* Side / Bottom Promotional & Community Cards */}
       <PromoSidebar

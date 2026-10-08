@@ -11,6 +11,9 @@ export interface RadioModelDef {
   hs?: Array<[string, [number, number, number, number], string]>;
 }
 
+export type SpeakerSize = 6 | 8 | 10 | 12;
+export type TweeterType = 'bala' | 'fenolico' | 'super';
+
 export interface Track {
   title: string;
   artist: string;

@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { audioEngine } from '../utils/audioEngine';
+import type { TweeterType } from '../types/radio';
 
 interface SpeakerChucheroProps {
   size: 6 | 8 | 10 | 12;
   color: string;
+  tweeterType: TweeterType;
 }
 
 interface ConeDef {
@@ -57,7 +59,7 @@ const SPKM: Record<number, { w: number; h: number; d: ConeDef[] }> = {
   },
 };
 
-export const SpeakerChuchero = ({ size, color }: SpeakerChucheroProps) => {
+export const SpeakerChuchero = ({ size, color, tweeterType }: SpeakerChucheroProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -160,7 +162,13 @@ export const SpeakerChuchero = ({ size, color }: SpeakerChucheroProps) => {
 
       const isActive = audioEngine.isVisualizationActive();
       const levels = audioEngine.readAnalyser();
-      const n = { b: levels.bass, m: levels.mid, t: levels.treble };
+      const tweeterLevel =
+        tweeterType === 'fenolico'
+          ? levels.mid
+          : tweeterType === 'super'
+            ? Math.min(1, levels.treble * 0.72 + levels.mid * 0.4)
+            : levels.treble;
+      const n = { b: levels.bass, m: levels.mid, t: tweeterLevel };
 
       let act = isDirty;
       let hasMotion = false;
@@ -261,7 +269,7 @@ export const SpeakerChuchero = ({ size, color }: SpeakerChucheroProps) => {
       audioEngine.audio.removeEventListener('visualchange', handlePlaybackChange);
       if (animId !== null) cancelAnimationFrame(animId);
     };
-  }, [size, color]);
+  }, [size, color, tweeterType]);
 
   return (
     <div className="spk" id="spk" ref={containerRef}>
