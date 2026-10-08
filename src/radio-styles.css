@@ -230,6 +230,11 @@ body[data-m=m3] .t1,body[data-m=m3] .t2{font-size:6.6cqw}body[data-m=m3] .t3{fon
 .vmsg{min-height:18px;margin-top:8px;font-size:13px;color:#ff7b7b}
 @media (min-width:1280px){.promo .kitb{font-size:16px;padding:14px 8px;letter-spacing:.02em}}
 @media (prefers-reduced-motion:reduce){.promo .vipb{animation:none}}
+#root{width:100%;min-height:100vh;overflow-x:hidden}
+@supports (min-height:100dvh){#root,#root>.min-h-screen{min-height:100dvh}}
+@media (orientation:landscape) and (max-height:600px){
+  body{height:auto;min-height:100vh;min-height:100dvh;justify-content:flex-start;overflow-y:auto;padding:max(4px,env(safe-area-inset-top,0px)) max(4px,env(safe-area-inset-right,0px)) max(4px,env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px))}
+}
 .vch+.vs{margin-top:10px}
 .accb{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:12px;z-index:60;display:flex;align-items:center;gap:8px;max-width:46vw;padding:5px 14px 5px 5px;border:1px solid #3a3b3e;border-radius:30px;background:linear-gradient(#2c2c2e,#141415);color:#e8eaee;font:700 14px Arial,sans-serif;cursor:pointer;box-shadow:0 4px 16px #000a;transition:transform .15s,border-color .2s}
 .accb:hover{transform:translateY(-1px);border-color:#5b8cff}
