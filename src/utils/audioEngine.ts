@@ -196,6 +196,10 @@ class AudioEngine {
     this.audio.volume = fraction;
   }
 
+  public isVisualizationActive() {
+    return !this.audio.paused || this.isSynthPlaying;
+  }
+
   public playBeep(freq = 1900, duration = 0.04) {
     if (!this.ac) return;
     try {
@@ -250,6 +254,7 @@ class AudioEngine {
     if (!this.initContext() || !this.ac) return;
 
     this.isSynthPlaying = true;
+    this.audio.dispatchEvent(new Event('visualchange'));
     let step = 0;
     const bpm = 118;
     const stepMs = (60 / bpm / 4) * 1000;
@@ -308,7 +313,9 @@ class AudioEngine {
       clearInterval(this.synthInterval);
       this.synthInterval = null;
     }
+    const wasSynthPlaying = this.isSynthPlaying;
     this.isSynthPlaying = false;
+    if (wasSynthPlaying) this.audio.dispatchEvent(new Event('visualchange'));
   }
 
   // DJ Soundboard: Reggaeton / Dembow Air Horn

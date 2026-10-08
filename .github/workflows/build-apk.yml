@@ -18,11 +18,10 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 
+          node-version: 22
 
       - name: Instalar Dependencias
-        run: npm ci || npm install
+        run: npm install --no-audit --no-fund
 
       - name: Verificar Tipos TypeScript
         run: npm run lint
@@ -48,8 +47,7 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: Configurar Java JDK 17
         uses: actions/setup-java@v4
@@ -58,29 +56,17 @@ jobs:
           java-version: 17
 
       - name: Instalar Dependencias
-        run: npm ci || npm install
+        run: npm install --no-audit --no-fund
 
-      - name: Compilar Web
-        run: npm run build
-
-      - name: Inicializar Capacitor Android
-        run: |
-          npx cap add android || true
-          npx cap sync android
+      - name: Compilar Web e inicializar Capacitor Android
+        run: npm run build:apk
 
       - name: Compilar APK con Gradle
-        run: |
-          if [ -d "android" ]; then
-            cd android
-            chmod +x gradlew
-            ./gradlew assembleDebug --no-daemon
-          else
-            echo "Directorio android no encontrado, generando paquete web compilado."
-          fi
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
 
       - name: Subir Archivo APK Compilado
         uses: actions/upload-artifact@v4
-        if: always()
+        if: success()
         with:
           name: radio-musicologos-android-apk
           path: |

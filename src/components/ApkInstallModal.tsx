@@ -21,7 +21,7 @@ export const ApkInstallModal = ({ isOpen, onClose }: ApkInstallModalProps) => {
   };
 
   const copyCapacitorCommands = () => {
-    const text = 'npm run build\nnpx cap sync android\nnpx cap open android';
+    const text = 'npm run build:apk\nnpm run android:debug';
     navigator.clipboard.writeText(text).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -49,7 +49,7 @@ export const ApkInstallModal = ({ isOpen, onClose }: ApkInstallModalProps) => {
             Instalar APK Android
           </h2>
           <p className="text-xs text-neutral-400 mt-1">
-            Instala la aplicación directamente en tu celular Android como una app nativa con pantalla completa.
+              Instala la versión web como aplicación desde el navegador. Para generar un archivo APK nativo, usa la guía de compilación.
           </p>
         </div>
 
@@ -66,12 +66,12 @@ export const ApkInstallModal = ({ isOpen, onClose }: ApkInstallModalProps) => {
                 onClick={handleInstallClick}
                 className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-black text-base shadow-xl shadow-green-900/50 transition-all active:scale-98 flex items-center justify-center gap-2"
               >
-                <span>📲 Instalar APK Ahora en Android</span>
+                <span>📲 Instalar aplicación ahora</span>
               </button>
             ) : (
               <div className="p-4 rounded-xl bg-neutral-900/90 border border-neutral-800 space-y-2">
-                <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                  <span>📱</span> Pasos para instalar en tu celular Android:
+              <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                  <span>📱</span> Instalar desde el navegador:
                 </div>
                 <ol className="text-[12px] text-neutral-300 space-y-1.5 pl-4 list-decimal">
                   <li>
@@ -80,9 +80,7 @@ export const ApkInstallModal = ({ isOpen, onClose }: ApkInstallModalProps) => {
                   <li>
                     Toca en <strong>"Instalar aplicación"</strong> o <strong>"Agregar a la pantalla principal"</strong>.
                   </li>
-                  <li>
-                    ¡Listo! Se creará el APK nativo en tu cajón de aplicaciones de Android.
-                  </li>
+                  <li>La aplicación web quedará instalada en la pantalla de inicio; esto no genera un archivo APK.</li>
                 </ol>
               </div>
             )}
@@ -108,12 +106,11 @@ export const ApkInstallModal = ({ isOpen, onClose }: ApkInstallModalProps) => {
           </div>
           <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-2.5 font-mono text-[11px] text-neutral-300 space-y-1">
             <div className="text-neutral-500"># Compilar para Android APK:</div>
-            <div>npm run build</div>
-            <div>npx cap sync android</div>
-            <div>npx cap open android</div>
+            <div>npm run build:apk</div>
+            <div>npm run android:debug</div>
           </div>
           <p className="text-[10px] text-neutral-500 mt-2">
-            El proyecto incluye configuración lista de Capacitor y Web App Manifest para generar el archivo APK o AAB firmado con Android Studio.
+            El APK de depuración queda en android/app/build/outputs/apk/debug/app-debug.apk. La compilación requiere Java 17 y Android SDK; el flujo de GitHub Actions también lo genera.
           </p>
         </div>
       </div>

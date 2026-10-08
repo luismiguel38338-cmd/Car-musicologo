@@ -37,6 +37,8 @@
 
 ## 🛠️ Instalación y Ejecución Local
 
+Se requiere Node.js 22 o superior.
+
 ### 1. Clonar el Repositorio
 ```bash
 git clone https://github.com/TU_USUARIO/radio-musicologos.git
@@ -52,7 +54,7 @@ npm install
 ```bash
 npm run dev
 ```
-Abre tu navegador en `http://localhost:3000`.
+Abre tu navegador en `http://localhost:5000`.
 
 ### 4. Compilar para Producción
 ```bash
@@ -65,28 +67,26 @@ Los archivos optimizados se generarán en la carpeta `dist/`.
 ## 📱 Compilar en APK para Android
 
 ### Opción A: Compilación Automática en GitHub (Recomendada)
-Este repositorio incluye un flujo de trabajo de **GitHub Actions** en `.github/workflows/build-apk.yml`.
-1. Sube este repositorio a tu cuenta de GitHub.
-2. Cada vez que hagas un `push` a la rama `main`, GitHub compilará automáticamente el proyecto y creará el archivo APK listo para descargar en la pestaña **Actions** -> **Artefactos**.
+El flujo de **GitHub Actions** en `.github/workflows/build-apk.yml` compila y valida la aplicación y genera un APK de depuración.
+1. Sube el repositorio a GitHub y abre la pestaña **Actions**.
+2. Ejecuta **Compilar Web & Android APK** con **Run workflow**, o haz `push` a `main` o `master`.
+3. Al finalizar correctamente, descarga `radio-musicologos-android-apk` en los artefactos de esa ejecución. El APK está dentro de `android/app/build/outputs/apk/debug/`.
 
-### Opción B: Compilación Local con Android Studio y Capacitor
-1. Compila la aplicación web:
+### Opción B: Compilación local
+Se requiere Node.js 22 o superior, Java JDK 17 y Android SDK (configurado en Android Studio).
+1. Genera y sincroniza el proyecto Android:
 ```bash
-npm run build
+npm run build:apk
 ```
-2. Agrega la plataforma Android:
+2. Para compilar un APK de depuración desde la terminal:
 ```bash
-npx cap add android
+npm run android:debug
 ```
-3. Sincroniza los archivos:
-```bash
-npx cap sync android
-```
-4. Abre el proyecto en Android Studio:
+El archivo se genera en `android/app/build/outputs/apk/debug/app-debug.apk`. Para abrir el proyecto en Android Studio:
 ```bash
 npx cap open android
 ```
-5. En Android Studio, ve a **Build** > **Build Bundle(s) / APK(s)** > **Build APK(s)** para generar tu archivo `.apk` final.
+En Android Studio, selecciona **Build** > **Build Bundle(s) / APK(s)** > **Build APK(s)**. El APK de depuración sirve para probar; para distribuirlo públicamente, crea una compilación release firmada.
 
 ---
 

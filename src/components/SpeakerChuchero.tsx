@@ -82,7 +82,8 @@ export const SpeakerChuchero = ({ size, color }: SpeakerChucheroProps) => {
     let srcData: ImageData | null = null;
     let recCanvas: HTMLCanvasElement | null = null;
     let isDirty = true;
-    let animId: number;
+    let animId: number | null = null;
+    let lastFrameAt = 0;
 
     const spkL = { b: 0, m: 0, t: 0 };
 
@@ -141,17 +142,28 @@ export const SpeakerChuchero = ({ size, color }: SpeakerChucheroProps) => {
 
     img.onload = () => {
       recolor(color);
+      startAnimation();
     };
 
-    // Main animation loop
-    const render = () => {
-      animId = requestAnimationFrame(render);
+    // Draw at up to 30 fps while playing, then stop once the cones settle.
+    const render = (timestamp: number) => {
+      animId = null;
       if (!recCanvas) return;
 
+      if (timestamp - lastFrameAt < 1000 / 30) {
+        if (audioEngine.isVisualizationActive() || spkL.b > 0.004 || spkL.m > 0.004 || spkL.t > 0.004 || isDirty) {
+          animId = requestAnimationFrame(render);
+        }
+        return;
+      }
+      lastFrameAt = timestamp;
+
+      const isActive = audioEngine.isVisualizationActive();
       const levels = audioEngine.readAnalyser();
       const n = { b: levels.bass, m: levels.mid, t: levels.treble };
 
       let act = isDirty;
+      let hasMotion = false;
       for (const k in n) {
         const key = k as 'b' | 'm' | 't';
         const v = n[key];
@@ -161,71 +173,93 @@ export const SpeakerChuchero = ({ size, color }: SpeakerChucheroProps) => {
         } else {
           act = true;
         }
+        hasMotion ||= spkL[key] > 0;
       }
 
-      if (!act) return;
-      isDirty = false;
+      if (act) {
+        isDirty = false;
 
-      const W = canvas.width;
-      const H = canvas.height;
-      ctx.clearRect(0, 0, W, H);
-      ctx.drawImage(recCanvas, 0, 0);
+        const W = canvas.width;
+        const H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(recCanvas, 0, 0);
 
-      // Render physical displacement of cones
-      for (const d of m.d) {
-        const v = spkL[d.k];
-        if (v <= 0) continue;
+        // Render physical displacement of cones
+        for (const d of m.d) {
+          const v = spkL[d.k];
+          if (v <= 0) continue;
 
-        const isBass = d.k === 'b';
-        const s1 = 1 + v * (isBass ? 0.075 : 0.05);
-        const s2 = 1 + v * (isBass ? 0.16 : 0.11);
+          const isBass = d.k === 'b';
+          const s1 = 1 + v * (isBass ? 0.075 : 0.05);
+          const s2 = 1 + v * (isBass ? 0.16 : 0.11);
 
-        const zoom = (R: number, s: number) => {
-          ctx.save();
+          const zoom = (R: number, s: number) => {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, R, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.translate(d.x, d.y);
+            ctx.scale(s, s);
+            ctx.translate(-d.x, -d.y);
+            ctx.drawImage(recCanvas!, 0, 0);
+            ctx.restore();
+          };
+
+          zoom(d.r, s1);
+          zoom(d.c, s2);
+
+          // Edge shadow gradient
+          const g = ctx.createRadialGradient(d.x, d.y, d.r * 0.55, d.x, d.y, d.r);
+          g.addColorStop(0, 'rgba(0,0,0,0)');
+          g.addColorStop(1, `rgba(0,0,0,${0.34 * v})`);
+          ctx.fillStyle = g;
           ctx.beginPath();
-          ctx.arc(d.x, d.y, R, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.translate(d.x, d.y);
-          ctx.scale(s, s);
-          ctx.translate(-d.x, -d.y);
-          ctx.drawImage(recCanvas!, 0, 0);
-          ctx.restore();
-        };
+          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+          ctx.fill();
 
-        zoom(d.r, s1);
-        zoom(d.c, s2);
+          // Highlight center cap
+          const h = ctx.createRadialGradient(d.x - d.c * 0.3, d.y - d.c * 0.3, 0, d.x, d.y, d.c);
+          h.addColorStop(0, `rgba(255,255,255,${0.2 * v})`);
+          h.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = h;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.c, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
-        // Edge shadow gradient
-        const g = ctx.createRadialGradient(d.x, d.y, d.r * 0.55, d.x, d.y, d.r);
-        g.addColorStop(0, 'rgba(0,0,0,0)');
-        g.addColorStop(1, `rgba(0,0,0,${0.34 * v})`);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Highlight center cap
-        const h = ctx.createRadialGradient(d.x - d.c * 0.3, d.y - d.c * 0.3, 0, d.x, d.y, d.c);
-        h.addColorStop(0, `rgba(255,255,255,${0.2 * v})`);
-        h.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = h;
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, d.c, 0, Math.PI * 2);
-        ctx.fill();
+        // Box vibration shake on high bass
+        const sh = spkL.b * 2.4;
+        canvas.style.transform =
+          sh > 0.05
+            ? `translate(${((Math.random() - 0.5) * sh).toFixed(2)}px, ${((Math.random() - 0.5) * sh).toFixed(2)}px)`
+            : '';
       }
 
-      // Box vibration shake on high bass
-      const sh = spkL.b * 2.4;
-      canvas.style.transform =
-        sh > 0.05
-          ? `translate(${((Math.random() - 0.5) * sh).toFixed(2)}px, ${((Math.random() - 0.5) * sh).toFixed(2)}px)`
-          : '';
+      if (isActive || hasMotion) {
+        animId = requestAnimationFrame(render);
+      }
     };
 
-    animId = requestAnimationFrame(render);
+    const startAnimation = () => {
+      if (animId === null) animId = requestAnimationFrame(render);
+    };
+    const handlePlaybackChange = () => {
+      if (audioEngine.isVisualizationActive() || spkL.b > 0.004 || spkL.m > 0.004 || spkL.t > 0.004) {
+        startAnimation();
+      }
+    };
+
+    audioEngine.audio.addEventListener('play', handlePlaybackChange);
+    audioEngine.audio.addEventListener('pause', handlePlaybackChange);
+    audioEngine.audio.addEventListener('ended', handlePlaybackChange);
+    audioEngine.audio.addEventListener('visualchange', handlePlaybackChange);
 
     return () => {
-      cancelAnimationFrame(animId);
+      audioEngine.audio.removeEventListener('play', handlePlaybackChange);
+      audioEngine.audio.removeEventListener('pause', handlePlaybackChange);
+      audioEngine.audio.removeEventListener('ended', handlePlaybackChange);
+      audioEngine.audio.removeEventListener('visualchange', handlePlaybackChange);
+      if (animId !== null) cancelAnimationFrame(animId);
     };
   }, [size, color]);
 

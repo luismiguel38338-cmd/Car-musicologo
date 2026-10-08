@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+@source "./";
+@source "../index.html";
 @import "./radio-styles.css";
 
 /* Car Audio Studio Acoustic Stage Background */

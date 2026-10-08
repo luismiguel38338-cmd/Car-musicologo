@@ -1,0 +1,1 @@
+- [Bun lockfile compatibility](bun-lock-compat.md) — avoid rewriting the imported lockfile with the workspace's older Bun toolchain.
