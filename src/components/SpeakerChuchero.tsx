@@ -1,11 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { audioEngine } from '../utils/audioEngine';
-import type { TweeterType } from '../types/radio';
+
+export type SoundSetupType = 'single' | 'double';
 
 interface SpeakerChucheroProps {
+  setup: SoundSetupType;
   size: 6 | 8 | 10 | 12;
   color: string;
-  tweeterType: TweeterType;
+  isVip: boolean;
+  onOpenVipModal: () => void;
+  onSelectSetup: (setup: SoundSetupType) => void;
 }
 
 interface ConeDef {
@@ -59,7 +63,13 @@ const SPKM: Record<number, { w: number; h: number; d: ConeDef[] }> = {
   },
 };
 
-export const SpeakerChuchero = ({ size, color, tweeterType }: SpeakerChucheroProps) => {
+export const SpeakerChuchero = ({
+  setup,
+  size,
+  color,
+  onOpenVipModal,
+  onSelectSetup,
+}: SpeakerChucheroProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -69,30 +79,34 @@ export const SpeakerChuchero = ({ size, color, tweeterType }: SpeakerChucheroPro
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const spkImg = new Image();
+    spkImg.src = `/assets/spk/spk_${size}.webp`;
+
+    let srcData: ImageData | null = null;
+    let recCanvas: HTMLCanvasElement | null = null;
+    let isDirty = true;
+    let animId: number;
+
+    const spkL = { b: 0, m: 0, t: 0 };
     const m = SPKM[size] || SPKM[6];
-    canvas.width = m.w;
-    canvas.height = m.h;
+
+    if (setup === 'single') {
+      canvas.width = m.w;
+      canvas.height = m.h;
+    } else {
+      canvas.width = m.w * 2 + 24;
+      canvas.height = m.h;
+    }
 
     if (containerRef.current) {
       containerRef.current.style.setProperty('--sw', (0.45 + (0.55 * m.w) / SPKM[12].w).toFixed(4));
       containerRef.current.style.setProperty('--sc', (0.45 + (0.55 * m.h) / SPKM[12].h).toFixed(4));
     }
 
-    const img = new Image();
-    img.src = `/assets/spk/spk_${size}.webp`;
-
-    let srcData: ImageData | null = null;
-    let recCanvas: HTMLCanvasElement | null = null;
-    let isDirty = true;
-    let animId: number | null = null;
-    let lastFrameAt = 0;
-
-    const spkL = { b: 0, m: 0, t: 0 };
-
     const recolor = (hex: string) => {
-      if (!img.complete || !img.naturalWidth) return;
-      const W = img.naturalWidth;
-      const H = img.naturalHeight;
+      if (!spkImg.complete || !spkImg.naturalWidth) return;
+      const W = spkImg.naturalWidth;
+      const H = spkImg.naturalHeight;
 
       if (!srcData) {
         const o = document.createElement('canvas');
@@ -100,7 +114,7 @@ export const SpeakerChuchero = ({ size, color, tweeterType }: SpeakerChucheroPro
         o.height = H;
         const c = o.getContext('2d');
         if (!c) return;
-        c.drawImage(img, 0, 0);
+        c.drawImage(spkImg, 0, 0);
         srcData = c.getImageData(0, 0, W, H);
       }
 
@@ -142,142 +156,151 @@ export const SpeakerChuchero = ({ size, color, tweeterType }: SpeakerChucheroPro
       }
     };
 
-    img.onload = () => {
-      recolor(color);
-      startAnimation();
+    spkImg.onload = () => recolor(color);
+
+    const drawChucheroUnit = (ox: number, oy: number) => {
+      if (!recCanvas) return;
+      ctx.save();
+      ctx.translate(ox, oy);
+      ctx.drawImage(recCanvas, 0, 0);
+
+      // Cones physical excursion
+      for (const d of m.d) {
+        const v = spkL[d.k];
+        if (v <= 0) continue;
+
+        const isBass = d.k === 'b';
+        const s1 = 1 + v * (isBass ? 0.08 : 0.05);
+        const s2 = 1 + v * (isBass ? 0.17 : 0.11);
+
+        const zoom = (R: number, s: number) => {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, R, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.translate(d.x, d.y);
+          ctx.scale(s, s);
+          ctx.translate(-d.x, -d.y);
+          ctx.drawImage(recCanvas!, 0, 0);
+          ctx.restore();
+        };
+
+        zoom(d.r, s1);
+        zoom(d.c, s2);
+
+        // Edge shadow
+        const g = ctx.createRadialGradient(d.x, d.y, d.r * 0.55, d.x, d.y, d.r);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, `rgba(0,0,0,${0.34 * v})`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Highlight center cap
+        const h = ctx.createRadialGradient(d.x - d.c * 0.3, d.y - d.c * 0.3, 0, d.x, d.y, d.c);
+        h.addColorStop(0, `rgba(255,255,255,${0.2 * v})`);
+        h.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = h;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.c, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     };
 
-    // Draw at up to 30 fps while playing, then stop once the cones settle.
-    const render = (timestamp: number) => {
-      animId = null;
-      if (!recCanvas) return;
+    const render = () => {
+      animId = requestAnimationFrame(render);
 
-      if (timestamp - lastFrameAt < 1000 / 30) {
-        if (audioEngine.isVisualizationActive() || spkL.b > 0.004 || spkL.m > 0.004 || spkL.t > 0.004 || isDirty) {
-          animId = requestAnimationFrame(render);
-        }
-        return;
-      }
-      lastFrameAt = timestamp;
-
-      const isActive = audioEngine.isVisualizationActive();
       const levels = audioEngine.readAnalyser();
-      const tweeterLevel =
-        tweeterType === 'fenolico'
-          ? levels.mid
-          : tweeterType === 'super'
-            ? Math.min(1, levels.treble * 0.72 + levels.mid * 0.4)
-            : levels.treble;
-      const n = { b: levels.bass, m: levels.mid, t: tweeterLevel };
+      const n = { b: levels.bass, m: levels.mid, t: levels.treble };
 
-      let act = isDirty;
-      let hasMotion = false;
       for (const k in n) {
         const key = k as 'b' | 'm' | 't';
         const v = n[key];
-        spkL[key] += (v - spkL[key]) * (v > spkL[key] ? 0.7 : 0.16);
-        if (spkL[key] < 0.004) {
-          spkL[key] = 0;
-        } else {
-          act = true;
-        }
-        hasMotion ||= spkL[key] > 0;
+        spkL[key] += (v - spkL[key]) * (v > spkL[key] ? 0.72 : 0.18);
+        if (spkL[key] < 0.003) spkL[key] = 0;
       }
 
-      if (act) {
-        isDirty = false;
+      const W = canvas.width;
+      const H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
 
-        const W = canvas.width;
-        const H = canvas.height;
-        ctx.clearRect(0, 0, W, H);
-        ctx.drawImage(recCanvas, 0, 0);
-
-        // Render physical displacement of cones
-        for (const d of m.d) {
-          const v = spkL[d.k];
-          if (v <= 0) continue;
-
-          const isBass = d.k === 'b';
-          const s1 = 1 + v * (isBass ? 0.075 : 0.05);
-          const s2 = 1 + v * (isBass ? 0.16 : 0.11);
-
-          const zoom = (R: number, s: number) => {
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(d.x, d.y, R, 0, Math.PI * 2);
-            ctx.clip();
-            ctx.translate(d.x, d.y);
-            ctx.scale(s, s);
-            ctx.translate(-d.x, -d.y);
-            ctx.drawImage(recCanvas!, 0, 0);
-            ctx.restore();
-          };
-
-          zoom(d.r, s1);
-          zoom(d.c, s2);
-
-          // Edge shadow gradient
-          const g = ctx.createRadialGradient(d.x, d.y, d.r * 0.55, d.x, d.y, d.r);
-          g.addColorStop(0, 'rgba(0,0,0,0)');
-          g.addColorStop(1, `rgba(0,0,0,${0.34 * v})`);
-          ctx.fillStyle = g;
-          ctx.beginPath();
-          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Highlight center cap
-          const h = ctx.createRadialGradient(d.x - d.c * 0.3, d.y - d.c * 0.3, 0, d.x, d.y, d.c);
-          h.addColorStop(0, `rgba(255,255,255,${0.2 * v})`);
-          h.addColorStop(1, 'rgba(255,255,255,0)');
-          ctx.fillStyle = h;
-          ctx.beginPath();
-          ctx.arc(d.x, d.y, d.c, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Box vibration shake on high bass
-        const sh = spkL.b * 2.4;
-        canvas.style.transform =
-          sh > 0.05
-            ? `translate(${((Math.random() - 0.5) * sh).toFixed(2)}px, ${((Math.random() - 0.5) * sh).toFixed(2)}px)`
-            : '';
+      if (setup === 'single') {
+        drawChucheroUnit(0, 0);
+      } else {
+        drawChucheroUnit(0, 0);
+        drawChucheroUnit(m.w + 24, 0);
       }
 
-      if (isActive || hasMotion) {
-        animId = requestAnimationFrame(render);
-      }
+      // Box vibration shake on heavy bass
+      const sh = spkL.b * 2.4;
+      canvas.style.transform =
+        sh > 0.05
+          ? `translate(${((Math.random() - 0.5) * sh).toFixed(2)}px, ${((Math.random() - 0.5) * sh).toFixed(2)}px)`
+          : '';
     };
 
-    const startAnimation = () => {
-      if (animId === null) animId = requestAnimationFrame(render);
-    };
-    const handlePlaybackChange = () => {
-      if (audioEngine.isVisualizationActive() || spkL.b > 0.004 || spkL.m > 0.004 || spkL.t > 0.004) {
-        startAnimation();
-      }
-    };
-
-    audioEngine.audio.addEventListener('play', handlePlaybackChange);
-    audioEngine.audio.addEventListener('pause', handlePlaybackChange);
-    audioEngine.audio.addEventListener('ended', handlePlaybackChange);
-    audioEngine.audio.addEventListener('visualchange', handlePlaybackChange);
+    animId = requestAnimationFrame(render);
 
     return () => {
-      audioEngine.audio.removeEventListener('play', handlePlaybackChange);
-      audioEngine.audio.removeEventListener('pause', handlePlaybackChange);
-      audioEngine.audio.removeEventListener('ended', handlePlaybackChange);
-      audioEngine.audio.removeEventListener('visualchange', handlePlaybackChange);
-      if (animId !== null) cancelAnimationFrame(animId);
+      cancelAnimationFrame(animId);
     };
-  }, [size, color, tweeterType]);
+  }, [setup, size, color]);
+
+  const setups = [
+    { id: 'single', name: '1 Chuchero', icon: '🔊' },
+    { id: 'double', name: 'Kitipo Doble', icon: '🔊🔊' },
+  ];
 
   return (
-    <div className="spk" id="spk" ref={containerRef}>
-      <canvas
-        ref={canvasRef}
-        id="spkc"
-        aria-label="Chuchero y Kitipo con bajos activos"
-      />
+    <div className="w-full flex flex-col items-center my-2 max-w-[1376px] px-2.5">
+      {/* Quick Setup Switcher */}
+      <div className="w-full max-w-sm bg-neutral-950/80 border border-neutral-800 rounded-2xl p-1.5 mb-2 shadow-lg backdrop-blur-md flex items-center justify-between gap-1">
+        <div className="flex items-center gap-1.5 pl-2 text-[11px] font-bold text-neutral-400">
+          <span>🔊</span>
+          <span>CHUCHEROS:</span>
+        </div>
+        <div className="flex items-center gap-1">
+          {setups.map((s) => {
+            const isSelected = setup === s.id;
+            return (
+              <button
+                key={s.id}
+                onClick={() => {
+                  audioEngine.playBeep(2000, 0.03);
+                  onSelectSetup(s.id as SoundSetupType);
+                }}
+                className={`py-1 px-3 rounded-xl text-xs font-bold flex items-center gap-1 transition-all select-none cursor-pointer ${
+                  isSelected
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50'
+                    : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300'
+                }`}
+              >
+                <span>{s.icon}</span>
+                <span>{s.name}</span>
+              </button>
+            );
+          })}
+          <button
+            onClick={onOpenVipModal}
+            className="py-1 px-2.5 rounded-xl text-[11px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-all cursor-pointer"
+            title="Personalizar tamaños y funciones VIP"
+          >
+            ⚙️ {size}"
+          </button>
+        </div>
+      </div>
+
+      {/* Main Canvas Container */}
+      <div className="spk" id="spk" ref={containerRef}>
+        <canvas
+          ref={canvasRef}
+          id="spkc"
+          aria-label="Chuchero y Kitipo dominicano"
+          className="max-w-full h-auto drop-shadow-2xl"
+        />
+      </div>
     </div>
   );
 };

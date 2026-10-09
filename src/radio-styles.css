@@ -114,6 +114,19 @@ body{margin:0;background:#000;min-height:100vh;display:flex;flex-direction:colum
 .promo .disb:focus-visible{outline:3px solid #fff;outline-offset:2px}
 @keyframes vpulse{0%,100%{box-shadow:0 4px 18px #ffb30066,inset 0 1px 0 #fff8}50%{box-shadow:0 4px 34px #ffb300dd,0 0 0 5px #ffb30030,inset 0 1px 0 #fff8}}
 .spk{display:flex;justify-content:center;width:100%;margin:6px 0}.spk canvas{display:block;height:calc(360px*var(--sc,1));width:auto;max-width:90vw;filter:drop-shadow(0 10px 18px #000c);will-change:transform}
+@media (max-width: 768px){
+  body{padding:4px !important;gap:6px !important}
+  .spk{margin:4px 0 !important}
+  .spk canvas{height:clamp(140px,21vh,250px) !important;width:auto !important;max-width:94vw !important}
+}
+@media (max-height: 550px) and (orientation: landscape){
+  body{padding:2px 6px !important;gap:4px !important}
+  .spk{position:static !important;transform:none !important;margin:0 !important;width:100% !important}
+  .spk canvas{height:clamp(150px,58vh,240px) !important;width:auto !important}
+}
+.fit-mobile{max-height:100vh !important;overflow:hidden !important;padding:2px !important;gap:2px !important}
+.fit-mobile .spk canvas{height:clamp(110px,18vh,190px) !important}
+.fit-mobile header{margin-bottom:2px !important;padding:0 4px !important}
 @media (min-width:1280px){:root{--cw:clamp(820px,calc(100vw - 600px),1376px);--sidew:min(300px,calc((100vw - var(--cw))/2 - 36px))}.casew{max-width:var(--cw)}.promo{position:fixed;right:calc(50% + var(--cw)/2 + 20px);top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;flex-wrap:nowrap;gap:14px;width:var(--sidew);margin:0}.promo .pc{flex:none;width:auto;max-width:none;padding:16px 12px 14px;border-color:#4a4c50;box-shadow:0 8px 30px #000c}.promo .vipb,.promo .donb,.promo .disb{font-size:16px;padding:14px 8px;letter-spacing:.02em}.promo .pc p{font-size:14px}.spk{position:fixed;left:calc(50% + var(--cw)/2 + 20px);top:50%;transform:translateY(-50%);z-index:40;width:var(--sidew);margin:0;justify-content:flex-start}.spk canvas{width:calc(100%*var(--sw,1));height:auto;max-width:none}}
 .vm{position:fixed;left:0;top:0;right:0;bottom:0;z-index:100000;display:none;align-items:center;justify-content:center;background:#000a;padding:14px;font-family:Arial,sans-serif}
 .vm.show{display:flex}

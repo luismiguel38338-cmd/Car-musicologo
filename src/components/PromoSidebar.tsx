@@ -49,7 +49,7 @@ export const PromoSidebar = ({
         <p>Modelos de radio, chucheros y voltajes para tu car audio.</p>
       </div>
 
-      {/* Kitipo y Bajos Box */}
+      {/* Kitipos y Chucheros Box */}
       <div className="pc">
         <button
           className="kitb w-full py-3.5 px-5 rounded-full font-bold text-base text-cyan-200 bg-gradient-to-r from-cyan-900 to-blue-900 border border-cyan-500/40 shadow-lg shadow-cyan-950/50 hover:brightness-110 active:scale-95 transition-all"

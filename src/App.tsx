@@ -4,14 +4,13 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { PlaylistFolder, EqUnitState, Track, SpeakerSize, TweeterType } from './types/radio';
+import { PlaylistFolder, EqUnitState, Track } from './types/radio';
 import { MODELS, COLORS } from './utils/models';
 import { audioEngine, EQ_PRESETS } from './utils/audioEngine';
 import { LoadingScreen } from './components/LoadingScreen';
 import { BatteryVoltMeter } from './components/BatteryVoltMeter';
 import { EqualizerStack } from './components/EqualizerStack';
-import { SpeakerChuchero } from './components/SpeakerChuchero';
-import { MusicologosCooler } from './components/MusicologosCooler';
+import { SpeakerChuchero, SoundSetupType } from './components/SpeakerChuchero';
 import { RadioFaceplate } from './components/RadioFaceplate';
 import { QuickToolbar } from './components/QuickToolbar';
 import { DjSoundboard } from './components/DjSoundboard';
@@ -21,6 +20,10 @@ import { PromoSidebar } from './components/PromoSidebar';
 import { MusicSelectorModal } from './components/MusicSelectorModal';
 import { DonationConfigModal, OwnerPaymentConfig } from './components/DonationConfigModal';
 import { ApkInstallModal } from './components/ApkInstallModal';
+import { AuthGate, UserAccount } from './components/AuthGate';
+import { Angle3DControlBar, Angle3DState } from './components/Angle3DControlBar';
+import { ChipeoProfileModal } from './components/ChipeoProfileModal';
+import { getChipeoProfile, addChipeoXP, ChipeoProfile } from './utils/chipeoSystem';
 
 const DEFAULT_PLAYLISTS: PlaylistFolder[] = [
   {
@@ -126,10 +129,23 @@ export default function App() {
   const [currentColorIndex, setCurrentColorIndex] = useState(0); // Blue
   const [currentCaseColor, setCurrentCaseColor] = useState('#1c1d21'); // Sleek Carbon by default
   const [currentSpeakerColor, setCurrentSpeakerColor] = useState('#0f70b7');
-  const [speakerSize, setSpeakerSize] = useState<SpeakerSize>(6);
-  const [tweeterType, setTweeterType] = useState<TweeterType>('bala');
+  const [speakerSize, setSpeakerSize] = useState<6 | 8 | 10 | 12>(6);
   const [currentModelId, setCurrentModelId] = useState('orig');
   const [is14Volt, setIs14Volt] = useState(false);
+  const [soundSetup, setSoundSetup] = useState<SoundSetupType>(() => {
+    try {
+      const saved = localStorage.getItem('musicologos_sound_setup');
+      if (saved === 'single' || saved === 'double') return saved;
+    } catch {}
+    return 'single';
+  });
+  const [isVip, setIsVip] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('musicologos_vip_unlocked');
+      if (saved !== null) return saved === 'true';
+    } catch {}
+    return true; // Default VIP active
+  });
 
   // Equalizer units
   const [eqUnits, setEqUnits] = useState<EqUnitState[]>([INITIAL_EQ_UNIT]);
@@ -151,6 +167,96 @@ export default function App() {
   const [isMusicOpen, setIsMusicOpen] = useState(false);
   const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [isApkModalOpen, setIsApkModalOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // User Authentication Gate
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
+    try {
+      const saved = localStorage.getItem('musicologos_auth_user');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return null;
+  });
+
+  // Chipeo Level & Sound Quality Profile
+  const [chipeoProfile, setChipeoProfile] = useState<ChipeoProfile>(() => {
+    return getChipeoProfile(currentUser?.email || '');
+  });
+
+  useEffect(() => {
+    if (currentUser?.email) {
+      setChipeoProfile(getChipeoProfile(currentUser.email));
+    }
+  }, [currentUser]);
+
+  // 3D Angle & High Capacity Sound State
+  const [angle3D, setAngle3D] = useState<Angle3DState>({
+    yaw: 0,
+    pitch: 0,
+    perspective: 1200,
+    highCapacity: false,
+    preset: 'front',
+  });
+
+  // Mobile Viewport Fit & Fullscreen
+  const [fitMobileScreen, setFitMobileScreen] = useState(() => {
+    try {
+      return localStorage.getItem('musicologos_fit_mobile') === 'true';
+    } catch {}
+    return false;
+  });
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFitMobile = () => {
+    audioEngine.playBeep(2000, 0.03);
+    const next = !fitMobileScreen;
+    setFitMobileScreen(next);
+    try {
+      localStorage.setItem('musicologos_fit_mobile', String(next));
+    } catch {}
+    showOverlay(next ? 'TODO EN PANTALLA' : 'VISTA LIBRE');
+  };
+
+  const toggleFullscreen = () => {
+    audioEngine.playBeep(2100, 0.04);
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+      showOverlay('PANTALLA COMPLETA');
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
+      showOverlay('SALIR PANTALLA COMPLETA');
+    }
+  };
+
+  useEffect(() => {
+    const onFs = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', onFs);
+    return () => document.removeEventListener('fullscreenchange', onFs);
+  }, []);
+
+  const handleSelectSetup = (setup: SoundSetupType) => {
+    setSoundSetup(setup);
+    try {
+      localStorage.setItem('musicologos_sound_setup', setup);
+    } catch {}
+    const labels: Record<SoundSetupType, string> = {
+      single: '1 CHUCHERO',
+      double: 'KITIPO DOBLE',
+    };
+    showOverlay(labels[setup] || 'CHUCHERO');
+  };
+
+  const handleToggleVip = (vipVal: boolean) => {
+    setIsVip(vipVal);
+    try {
+      localStorage.setItem('musicologos_vip_unlocked', String(vipVal));
+    } catch {}
+    showOverlay(vipVal ? 'VIP ACTIVADO' : 'VIP NORMAL');
+  };
 
   // Owner Custom Payment & DJ Config
   const [paymentConfig, setPaymentConfig] = useState<OwnerPaymentConfig>(() => {
@@ -523,6 +629,48 @@ export default function App() {
     showOverlay(`EQ ${count} UNIDADES`);
   };
 
+  const handleUnitsChange = (updated: EqUnitState[]) => {
+    setEqUnits(updated);
+    if (currentUser?.email) {
+      const { updated: newProf, leveledUp } = addChipeoXP(currentUser.email, chipeoProfile, 8, 1);
+      setChipeoProfile(newProf);
+      if (leveledUp) {
+        showOverlay(`¡SUBISTE A NIVEL ${newProf.level}! 🏆`);
+        audioEngine.playBeep(2600, 0.08);
+      }
+    }
+  };
+
+  const handleOptimizeQuality = () => {
+    const optimized: EqUnitState[] = eqUnits.map((u) => ({
+      ...u,
+      vals: {
+        ...u.vals,
+        sub: 10,
+        b0: 10,
+        b1: 8,
+        b2: 3,
+        b3: 2,
+        b4: 5,
+        b5: 7,
+        b6: 9,
+        loud: 1.0,
+        vol: 0.82,
+      },
+      byp: false,
+    }));
+    setEqUnits(optimized);
+    audioEngine.wireUnits(optimized);
+    if (currentUser?.email) {
+      const { updated: newProf, leveledUp } = addChipeoXP(currentUser.email, chipeoProfile, 40, 6);
+      setChipeoProfile(newProf);
+      showOverlay(leveledUp ? `¡NIVEL ${newProf.level} ALCANZADO! 🏆` : 'CALIDAD AFINADA AL MÁXIMO');
+      audioEngine.playBeep(2400, 0.06);
+    } else {
+      showOverlay('CALIDAD AFINADA AL MÁXIMO');
+    }
+  };
+
   const handleResetColors = () => {
     setCurrentColorIndex(0);
     setCurrentCaseColor('#1c1d21');
@@ -562,7 +710,11 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-2 relative overflow-x-hidden font-sans">
+    <div
+      className={`min-h-screen bg-black text-white flex flex-col items-center justify-center p-2 relative overflow-x-hidden font-sans ${
+        fitMobileScreen ? 'fit-mobile' : ''
+      }`}
+    >
       <LoadingScreen brandName={djBrandName} />
 
       {/* Top Studio Control Header Bar */}
@@ -584,7 +736,76 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* User Account / Verification Status & Chipeo Level */}
+          {currentUser ? (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => {
+                  audioEngine.playBeep(2000, 0.03);
+                  setIsProfileOpen(true);
+                }}
+                className="flex items-center gap-1.5 bg-gradient-to-r from-neutral-900 via-cyan-950/70 to-neutral-900 border border-cyan-500/50 hover:border-cyan-400 py-1 px-2.5 rounded-lg text-[11px] text-neutral-200 transition-all cursor-pointer shadow-md shadow-cyan-950/40"
+                title="Ver Perfil de Chipeo, Rango y Calidad de Sonido"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="font-bold text-white max-w-[85px] truncate">
+                  {currentUser.email.split('@')[0]}
+                </span>
+                <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-black text-[10px] font-black px-1.5 py-0.2 rounded-full shadow-sm">
+                  LVL {chipeoProfile.level}
+                </span>
+                <span className="text-emerald-400 font-mono font-black text-[10px]">
+                  {chipeoProfile.soundQuality}%
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  audioEngine.playBeep(1800, 0.03);
+                  localStorage.removeItem('musicologos_auth_user');
+                  setCurrentUser(null);
+                  showOverlay('SESIÓN CERRADA');
+                }}
+                className="text-red-400 hover:text-red-300 font-bold px-1.5 py-1 text-[11px] cursor-pointer hover:underline"
+                title="Cerrar sesión y verificar contraseña de nuevo"
+              >
+                Salir
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                audioEngine.playBeep(2000, 0.03);
+                setCurrentUser(null);
+              }}
+              className="py-1 px-2.5 rounded-lg bg-cyan-600/30 border border-cyan-400/50 text-cyan-200 font-bold text-[11px] cursor-pointer hover:bg-cyan-600/40"
+            >
+              👤 Verificar / Entrar
+            </button>
+          )}
+
+          {/* Fit Mobile Screen Toggle */}
+          <button
+            onClick={toggleFitMobile}
+            className={`py-1.5 px-2.5 rounded-lg font-black transition-all text-[11px] flex items-center gap-1 cursor-pointer border ${
+              fitMobileScreen
+                ? 'bg-amber-500 border-amber-400 text-black shadow-lg shadow-amber-500/30'
+                : 'bg-neutral-900 border-neutral-700 hover:border-amber-400 text-amber-300'
+            }`}
+            title="Ajustar todo a la pantalla del celular sin necesidad de scroll"
+          >
+            <span>📱 {fitMobileScreen ? 'Vista Libre' : 'Ajustar Celular'}</span>
+          </button>
+
+          {/* Fullscreen Toggle */}
+          <button
+            onClick={toggleFullscreen}
+            className="py-1.5 px-2 rounded-lg bg-neutral-900 border border-neutral-700 hover:border-cyan-400 text-neutral-300 font-bold transition-all text-[11px] flex items-center gap-1 cursor-pointer"
+            title={isFullscreen ? 'Salir de Pantalla Completa' : 'Pantalla Completa'}
+          >
+            <span>{isFullscreen ? '🗗' : '⛶'}</span>
+          </button>
+
           <a
             href="https://discord.gg/FYxevNeSp"
             target="_blank"
@@ -593,7 +814,7 @@ export default function App() {
             className="py-1.5 px-3 rounded-lg bg-[#5865F2] hover:bg-[#4752c4] text-white font-extrabold transition-all text-[11px] flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-950/60"
             title="Pedir futuras actualizaciones en mi Discord"
           >
-            <span>💬 Discord Actualizaciones</span>
+            <span>💬 Discord</span>
           </a>
           <button
             onClick={() => setIsApkModalOpen(true)}
@@ -616,13 +837,37 @@ export default function App() {
             className="py-1.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black transition-all text-[11px] flex items-center gap-1.5 cursor-pointer shadow-lg shadow-blue-900/40"
             title="Abrir factura de pago oficial de PayPal"
           >
-            💳 Pagar Factura PayPal
+            💳 Pagar PayPal
           </a>
         </div>
       </header>
 
-      {/* Main Car Audio Outer Enclosure */}
-      <div className="casew">
+      {/* 3D Angle & High Capacity Control Bar */}
+      <Angle3DControlBar
+        state={angle3D}
+        onChange={setAngle3D}
+        onOverlayMsg={showOverlay}
+      />
+
+      {/* 3D Stage Wrapper for Radio Enclosure and Chucheros */}
+      <div
+        className="w-full flex flex-col items-center transition-all duration-300 ease-out"
+        style={{
+          perspective: '1300px',
+          perspectiveOrigin: '50% 35%',
+        }}
+      >
+        <div
+          className="w-full flex flex-col items-center transition-transform duration-300 ease-out"
+          style={{
+            transform: `rotateY(${angle3D.yaw}deg) rotateX(${angle3D.pitch}deg) ${
+              angle3D.highCapacity ? 'scale(1.02)' : 'scale(1)'
+            }`,
+            transformStyle: 'preserve-3d',
+          }}
+        >
+          {/* Main Car Audio Outer Enclosure */}
+          <div className="casew">
         <div
           className="case"
           id="case"
@@ -630,8 +875,8 @@ export default function App() {
             ['--cc' as string]: currentCaseColor,
           }}
         >
-          {/* Top Battery Voltmeter (12.6V / 14.4V) */}
-          <BatteryVoltMeter isOn={isOn} baseVoltage={is14Volt ? 14.4 : 12.6} />
+          {/* Top Battery Voltmeter (12.6V / 14.4V / 16.2V VIP) */}
+          <BatteryVoltMeter isOn={isOn} baseVoltage={is14Volt ? (isVip ? 16.2 : 14.4) : 12.6} />
 
           {/* Equalizer and Faceplate Stack */}
           <div className="cin">
@@ -646,7 +891,7 @@ export default function App() {
               <EqualizerStack
                 units={eqUnits}
                 isOn={isOn}
-                onUnitsChange={(u) => setEqUnits(u)}
+                onUnitsChange={handleUnitsChange}
                 onOverlayMsg={(msg) => showOverlay(msg)}
               />
 
@@ -704,29 +949,17 @@ export default function App() {
         onOpenVip={() => setIsVipOpen(true)}
       />
 
-      {/* Chuchero Speaker Box with animated Woofers */}
-      <SpeakerChuchero size={speakerSize} color={currentSpeakerColor} tweeterType={tweeterType} />
-
-      {/* Musicólogos cooler with the same playback-reactive speaker setup */}
-      <MusicologosCooler
+      {/* Chuchero Speaker Box, Muro de 5 y Cajón de Bajos */}
+      <SpeakerChuchero
+        setup={soundSetup}
         size={speakerSize}
         color={currentSpeakerColor}
-        tweeterType={tweeterType}
-        isPlaying={isPlaying}
-        onSizeChange={(size) => {
-          setSpeakerSize(size);
-          showOverlay(`CHUCHERO ${size}"`);
-        }}
-        onTweeterTypeChange={(type) => {
-          setTweeterType(type);
-          const labels: Record<TweeterType, string> = {
-            bala: 'TWEETER BALA',
-            fenolico: 'DRIVER FENÓLICO',
-            super: 'SUPER TWEETER',
-          };
-          showOverlay(labels[type]);
-        }}
+        isVip={isVip}
+        onOpenVipModal={() => setIsVipOpen(true)}
+        onSelectSetup={handleSelectSetup}
       />
+        </div>
+      </div>
 
       {/* Side / Bottom Promotional & Community Cards */}
       <PromoSidebar
@@ -771,6 +1004,8 @@ export default function App() {
           setSpeakerSize(sz);
           showOverlay(`CHUCHERO ${sz}"`);
         }}
+        soundSetup={soundSetup}
+        onSelectSetup={handleSelectSetup}
         currentModelId={currentModelId}
         onSelectModel={(mid) => {
           setCurrentModelId(mid);
@@ -779,8 +1014,10 @@ export default function App() {
         is14Volt={is14Volt}
         onToggleVolt={(v) => {
           setIs14Volt(v);
-          showOverlay(v ? 'TURBO 14.4V' : 'NORMAL 12.6V');
+          showOverlay(v ? (isVip ? 'SPL VIP 16.2V' : 'TURBO 14.4V') : 'NORMAL 12.6V');
         }}
+        isVip={isVip}
+        onToggleVip={handleToggleVip}
         onPlaySynthTest={() => {
           setFolderIndex(1);
           setTrackIndex(0);
@@ -818,6 +1055,34 @@ export default function App() {
         isOpen={isApkModalOpen}
         onClose={() => setIsApkModalOpen(false)}
       />
+
+      {/* User Chipeo Profile & Quality Level Modal */}
+      <ChipeoProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        profile={chipeoProfile}
+        email={currentUser?.email || 'chipero@musicologos.rd'}
+        onOptimizeQuality={handleOptimizeQuality}
+        onLogout={() => {
+          localStorage.removeItem('musicologos_auth_user');
+          setCurrentUser(null);
+          setIsProfileOpen(false);
+          showOverlay('SESIÓN CERRADA');
+        }}
+      />
+
+      {/* User Verification & Auth Gate */}
+      {!currentUser && (
+        <AuthGate
+          onLoginSuccess={(u) => {
+            setCurrentUser(u);
+            const prof = getChipeoProfile(u.email);
+            setChipeoProfile(prof);
+            setIsProfileOpen(true);
+            showOverlay(`BIENVENIDO ${u.name.toUpperCase()} · LVL ${prof.level}`);
+          }}
+        />
+      )}
 
       <div className="hint text-neutral-500 text-xs mt-6 text-center">
         Musicólogos Studio · Car Audio Dominicano · Chucheros, Kitipos y Bajos Activos

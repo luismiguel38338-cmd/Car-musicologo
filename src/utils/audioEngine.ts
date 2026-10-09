@@ -40,6 +40,9 @@ class AudioEngine {
   private analyser: AnalyserNode | null = null;
   private compressor: DynamicsCompressorNode | null = null;
   private bus: GainNode | null = null;
+  private capacityGain: GainNode | null = null;
+  private bassExciter: BiquadFilterNode | null = null;
+  private isHighCapacity = false;
   private unitNodes: EqNodeGroup[] = [];
   private freqBuffer: Uint8Array<ArrayBuffer> | null = null;
   private synthInterval: number | null = null;
@@ -75,7 +78,17 @@ class AudioEngine {
       cp.release.value = 0.2;
 
       const bus = ac.createGain();
-      bus.connect(cp);
+      const exciter = ac.createBiquadFilter();
+      exciter.type = 'lowshelf';
+      exciter.frequency.value = 65;
+      exciter.gain.value = this.isHighCapacity ? 7.5 : 0;
+
+      const capGain = ac.createGain();
+      capGain.gain.value = this.isHighCapacity ? 1.45 : 1.0;
+
+      bus.connect(exciter);
+      exciter.connect(capGain);
+      capGain.connect(cp);
       cp.connect(an);
       an.connect(ac.destination);
 
@@ -85,12 +98,27 @@ class AudioEngine {
       this.compressor = cp;
       this.analyser = an;
       this.bus = bus;
+      this.capacityGain = capGain;
+      this.bassExciter = exciter;
       this.source = src;
       return true;
     } catch (e) {
       console.warn('AudioContext init error:', e);
       return false;
     }
+  }
+
+  public setHighCapacityMode(enabled: boolean) {
+    this.isHighCapacity = enabled;
+    if (this.ac && this.capacityGain && this.bassExciter) {
+      const tt = this.ac.currentTime;
+      this.capacityGain.gain.setTargetAtTime(enabled ? 1.45 : 1.0, tt, 0.04);
+      this.bassExciter.gain.setTargetAtTime(enabled ? 7.5 : 0, tt, 0.04);
+    }
+  }
+
+  public getHighCapacityMode(): boolean {
+    return this.isHighCapacity;
   }
 
   public wireUnits(units: EqUnitState[]) {
