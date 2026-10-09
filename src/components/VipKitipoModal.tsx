@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { MODELS } from '../utils/models';
 import { audioEngine } from '../utils/audioEngine';
 import { SoundSetupType } from './SpeakerChuchero';
+import {
+  openPayPalImmediate,
+  validateUnlockCode,
+  PAYPAL_PRIMARY_EMAIL,
+  PAYPAL_PRIMARY_INVOICE,
+  PAID_ITEMS,
+} from '../utils/paidItems';
 
 interface VipKitipoModalProps {
   isOpen: boolean;
@@ -17,6 +24,9 @@ interface VipKitipoModalProps {
   isVip: boolean;
   onToggleVip: (vip: boolean) => void;
   onPlaySynthTest: () => void;
+  onOpenPaidStore?: () => void;
+  isDoubleUnlocked?: boolean;
+  onRequestUnlockDouble?: () => void;
 }
 
 export const VipKitipoModal: React.FC<VipKitipoModalProps> = ({
@@ -33,6 +43,9 @@ export const VipKitipoModal: React.FC<VipKitipoModalProps> = ({
   isVip,
   onToggleVip,
   onPlaySynthTest,
+  onOpenPaidStore,
+  isDoubleUnlocked,
+  onRequestUnlockDouble,
 }) => {
   const [promoCode, setPromoCode] = useState('');
   const [promoMsg, setPromoMsg] = useState('');
@@ -41,15 +54,19 @@ export const VipKitipoModal: React.FC<VipKitipoModalProps> = ({
 
   const handleApplyCode = () => {
     audioEngine.playBeep(2200, 0.04);
-    if (promoCode.trim()) {
+    const res = validateUnlockCode(promoCode);
+    if (res.success) {
       onToggleVip(true);
-      setPromoMsg('¡Pase VIP Desbloqueado con Éxito!');
+      setPromoMsg(res.message);
+    } else {
+      setPromoMsg(res.message);
     }
   };
 
   const handleOpenPayPal = () => {
     audioEngine.playBeep(2100, 0.04);
-    window.open('https://www.paypal.com/invoice/p/#GZ9P8RYCZX64484J', '_blank');
+    // Inmediatamente abre PayPal a negrito08m@gmail.com
+    openPayPalImmediate(PAID_ITEMS[0], 5.0);
   };
 
   const soundOptions = [
@@ -138,9 +155,22 @@ export const VipKitipoModal: React.FC<VipKitipoModalProps> = ({
             <button
               onClick={handleOpenPayPal}
               className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:brightness-110 text-white font-black text-xs shadow-lg shadow-blue-900/50 flex items-center justify-center gap-2 cursor-pointer transition-all"
+              title={`Pagar a PayPal (${PAYPAL_PRIMARY_EMAIL})`}
             >
-              <span>💳 Pagar Factura VIP ($5 USD) en PayPal</span>
+              <span>💳 Pagar $5 USD en PayPal</span>
             </button>
+
+            {onOpenPaidStore && (
+              <button
+                onClick={() => {
+                  audioEngine.playBeep(2100, 0.03);
+                  onOpenPaidStore();
+                }}
+                className="py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-110 text-black font-black text-xs shadow-lg shadow-amber-500/30 flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+              >
+                <span>👑 Todas las Cosas de Pago</span>
+              </button>
+            )}
 
             <button
               onClick={() => {
@@ -183,16 +213,25 @@ export const VipKitipoModal: React.FC<VipKitipoModalProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
           {soundOptions.map((opt) => {
             const isSelected = soundSetup === opt.id;
+            const isDouble = opt.id === 'double';
+            const isLocked = isDouble && !isDoubleUnlocked;
+
             return (
               <button
                 key={opt.id}
                 onClick={() => {
                   audioEngine.playBeep(1900, 0.03);
-                  onSelectSetup(opt.id as SoundSetupType);
+                  if (isLocked) {
+                    onRequestUnlockDouble?.();
+                  } else {
+                    onSelectSetup(opt.id as SoundSetupType);
+                  }
                 }}
                 className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
                   isSelected
                     ? 'border-cyan-400 bg-cyan-950/40 text-white shadow-lg shadow-cyan-950/50 ring-1 ring-cyan-400'
+                    : isLocked
+                    ? 'border-amber-500/40 bg-neutral-900/80 text-amber-300 hover:border-amber-400'
                     : 'border-neutral-800 bg-neutral-900/70 text-neutral-300 hover:border-neutral-700 hover:bg-neutral-900'
                 }`}
               >
@@ -202,6 +241,11 @@ export const VipKitipoModal: React.FC<VipKitipoModalProps> = ({
                     <span>{opt.name}</span>
                   </span>
                   {isSelected && <span className="text-cyan-400">✓</span>}
+                  {isLocked && (
+                    <span className="text-[10px] font-black bg-amber-500 text-black px-1.5 py-0.5 rounded shadow">
+                      🔒 $1.11 / 2020
+                    </span>
+                  )}
                 </div>
                 <div className="text-xs text-neutral-400 mt-1">{opt.desc}</div>
               </button>

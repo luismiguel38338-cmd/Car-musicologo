@@ -10,6 +10,7 @@ interface QuickToolbarProps {
   onNextColor: () => void;
   onOpenOptions: () => void;
   onOpenVip: () => void;
+  onOpenPaidStore?: () => void;
 }
 
 export const QuickToolbar = ({
@@ -22,6 +23,7 @@ export const QuickToolbar = ({
   onNextColor,
   onOpenOptions,
   onOpenVip,
+  onOpenPaidStore,
 }: QuickToolbarProps) => {
   return (
     <>
@@ -122,6 +124,17 @@ export const QuickToolbar = ({
         >
           ⭐ Kitipo & VIP
         </button>
+        {onOpenPaidStore && (
+          <button
+            className="optb bg-gradient-to-r from-blue-700 to-indigo-700 border-blue-400 text-white font-extrabold hover:brightness-110 shadow-md shadow-blue-900/40"
+            onClick={() => {
+              audioEngine.playBeep(2300, 0.04);
+              onOpenPaidStore();
+            }}
+          >
+            💳 Pago PayPal
+          </button>
+        )}
       </div>
     </>
   );

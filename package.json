@@ -7,7 +7,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "vite --port=5000 --host=0.0.0.0",
+    "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "build:apk": "npm run build && (test -d android || npx cap add android) && npx cap sync android",
     "android:debug": "npm run build:apk && cd android && ./gradlew assembleDebug",

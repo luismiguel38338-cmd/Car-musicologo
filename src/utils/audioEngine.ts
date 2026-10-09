@@ -515,6 +515,109 @@ class AudioEngine {
     osc.start(cur);
     osc.stop(cur + dur);
   }
+
+  // DJ Chipeo VIP: Sirena Policía Dominicana Quisqueya
+  public playPoliceSirenDominicana() {
+    if (!this.initContext() || !this.ac) return;
+    const cur = this.ac.currentTime;
+    const osc = this.ac.createOscillator();
+    const g = this.ac.createGain();
+    const dur = 1.2;
+
+    osc.type = 'sawtooth';
+    // Modulación rápida estilo sirena patrulla dominicana
+    osc.frequency.setValueAtTime(650, cur);
+    osc.frequency.linearRampToValueAtTime(1450, cur + 0.3);
+    osc.frequency.linearRampToValueAtTime(650, cur + 0.6);
+    osc.frequency.linearRampToValueAtTime(1550, cur + 0.9);
+    osc.frequency.linearRampToValueAtTime(650, cur + dur);
+
+    g.gain.setValueAtTime(0.4, cur);
+    g.gain.setValueAtTime(0.4, cur + dur - 0.1);
+    g.gain.exponentialRampToValueAtTime(0.001, cur + dur);
+
+    osc.connect(g);
+    if (this.unitNodes[0]) {
+      g.connect(this.unitNodes[0].in);
+    } else if (this.bus) {
+      g.connect(this.bus);
+    } else {
+      g.connect(this.ac.destination);
+    }
+
+    osc.start(cur);
+    osc.stop(cur + dur);
+  }
+
+  // DJ Chipeo VIP: Corneta Claxon SPL de Competencia
+  public playClaxonCornetaSPL() {
+    if (!this.initContext() || !this.ac) return;
+    const cur = this.ac.currentTime;
+    const osc1 = this.ac.createOscillator();
+    const osc2 = this.ac.createOscillator();
+    const g = this.ac.createGain();
+    const dur = 0.85;
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'triangle';
+
+    // Frecuencias combinadas para tono de corneta bitono real
+    osc1.frequency.setValueAtTime(420, cur);
+    osc2.frequency.setValueAtTime(540, cur);
+
+    g.gain.setValueAtTime(0.45, cur);
+    g.gain.setValueAtTime(0.45, cur + dur - 0.15);
+    g.gain.exponentialRampToValueAtTime(0.001, cur + dur);
+
+    osc1.connect(g);
+    osc2.connect(g);
+
+    if (this.unitNodes[0]) {
+      g.connect(this.unitNodes[0].in);
+    } else if (this.bus) {
+      g.connect(this.bus);
+    } else {
+      g.connect(this.ac.destination);
+    }
+
+    osc1.start(cur);
+    osc2.start(cur);
+    osc1.stop(cur + dur);
+    osc2.stop(cur + dur);
+  }
+
+  // DJ Chipeo VIP: Redoble Dembow Stems
+  public playDembowRoll() {
+    if (!this.initContext() || !this.ac) return;
+    const cur = this.ac.currentTime;
+    const stepCount = 6;
+    const stepInterval = 0.07;
+
+    for (let i = 0; i < stepCount; i++) {
+      const osc = this.ac.createOscillator();
+      const g = this.ac.createGain();
+      const st = cur + i * stepInterval;
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(180, st);
+      osc.frequency.exponentialRampToValueAtTime(45, st + 0.05);
+
+      g.gain.setValueAtTime(0.5, st);
+      g.gain.exponentialRampToValueAtTime(0.001, st + 0.05);
+
+      osc.connect(g);
+      if (this.unitNodes[0]) {
+        g.connect(this.unitNodes[0].in);
+      } else if (this.bus) {
+        g.connect(this.bus);
+      } else {
+        g.connect(this.ac.destination);
+      }
+
+      osc.start(st);
+      osc.stop(st + 0.06);
+    }
+  }
 }
 
 export const audioEngine = new AudioEngine();

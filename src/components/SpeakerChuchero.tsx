@@ -10,6 +10,8 @@ interface SpeakerChucheroProps {
   isVip: boolean;
   onOpenVipModal: () => void;
   onSelectSetup: (setup: SoundSetupType) => void;
+  isDoubleUnlocked?: boolean;
+  onRequestUnlockDouble?: () => void;
 }
 
 interface ConeDef {
@@ -69,6 +71,8 @@ export const SpeakerChuchero = ({
   color,
   onOpenVipModal,
   onSelectSetup,
+  isDoubleUnlocked,
+  onRequestUnlockDouble,
 }: SpeakerChucheroProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -264,21 +268,40 @@ export const SpeakerChuchero = ({
         <div className="flex items-center gap-1">
           {setups.map((s) => {
             const isSelected = setup === s.id;
+            const isDouble = s.id === 'double';
+            const isLocked = isDouble && !isDoubleUnlocked;
+
             return (
               <button
                 key={s.id}
                 onClick={() => {
                   audioEngine.playBeep(2000, 0.03);
-                  onSelectSetup(s.id as SoundSetupType);
+                  if (isLocked) {
+                    onRequestUnlockDouble?.();
+                  } else {
+                    onSelectSetup(s.id as SoundSetupType);
+                  }
                 }}
                 className={`py-1 px-3 rounded-xl text-xs font-bold flex items-center gap-1 transition-all select-none cursor-pointer ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50'
+                    : isLocked
+                    ? 'bg-neutral-900 hover:bg-neutral-800 text-amber-300 border border-amber-500/30'
                     : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300'
                 }`}
+                title={
+                  isLocked
+                    ? 'Poner los 2 chucheros ($1.11 USD o código gratis: 2020)'
+                    : `Seleccionar ${s.name}`
+                }
               >
                 <span>{s.icon}</span>
                 <span>{s.name}</span>
+                {isLocked && (
+                  <span className="text-[9px] bg-amber-500 text-black font-black px-1 py-0.2 rounded ml-0.5">
+                    $1.11 / 2020
+                  </span>
+                )}
               </button>
             );
           })}

@@ -24,6 +24,15 @@ import { AuthGate, UserAccount } from './components/AuthGate';
 import { Angle3DControlBar, Angle3DState } from './components/Angle3DControlBar';
 import { ChipeoProfileModal } from './components/ChipeoProfileModal';
 import { getChipeoProfile, addChipeoXP, ChipeoProfile } from './utils/chipeoSystem';
+import { PaidStoreModal } from './components/PaidStoreModal';
+import { DoubleChucheroModal } from './components/DoubleChucheroModal';
+import {
+  getUnlockedItems,
+  openPayPalImmediate,
+  isDoubleChucherosUnlocked,
+  PAYPAL_PRIMARY_EMAIL,
+  PAYPAL_PRIMARY_INVOICE,
+} from './utils/paidItems';
 
 const DEFAULT_PLAYLISTS: PlaylistFolder[] = [
   {
@@ -168,6 +177,12 @@ export default function App() {
   const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [isApkModalOpen, setIsApkModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isPaidStoreOpen, setIsPaidStoreOpen] = useState(false);
+  const [isDoubleModalOpen, setIsDoubleModalOpen] = useState(false);
+
+  // Unlocked Paid Items & Codes
+  const [unlockedItems, setUnlockedItems] = useState<string[]>(() => getUnlockedItems());
+  const isDoubleUnlocked = isDoubleChucherosUnlocked() || unlockedItems.includes('kitipo_titanium') || unlockedItems.includes('combo_all_access');
 
   // User Authentication Gate
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
@@ -239,13 +254,18 @@ export default function App() {
   }, []);
 
   const handleSelectSetup = (setup: SoundSetupType) => {
+    if (setup === 'double' && !isDoubleUnlocked) {
+      audioEngine.playBeep(2100, 0.04);
+      setIsDoubleModalOpen(true);
+      return;
+    }
     setSoundSetup(setup);
     try {
       localStorage.setItem('musicologos_sound_setup', setup);
     } catch {}
     const labels: Record<SoundSetupType, string> = {
       single: '1 CHUCHERO',
-      double: 'KITIPO DOBLE',
+      double: 'KITIPO DOBLE (2 CHUCHEROS)',
     };
     showOverlay(labels[setup] || 'CHUCHERO');
   };
@@ -266,8 +286,8 @@ export default function App() {
     } catch {}
     return {
       ownerName: 'Luis Miguel Musicólogo',
-      paypalUrl: 'https://www.paypal.com/invoice/p/#GZ9P8RYCZX64484J',
-      paypalEmail: '',
+      paypalUrl: 'https://www.paypal.com/paypalme/negrito08m',
+      paypalEmail: 'negrito08m@gmail.com',
       donationAmount: '5',
       donationMessage: '¡Gracias por apoyar a Luis Miguel Musicólogo Car Audio Oficial!',
       whatsapp: '',
@@ -829,16 +849,30 @@ export default function App() {
           >
             📻 Emisoras
           </button>
-          <a
-            href="https://www.paypal.com/invoice/p/#GZ9P8RYCZX64484J"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => audioEngine.playBeep(2100, 0.04)}
-            className="py-1.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black transition-all text-[11px] flex items-center gap-1.5 cursor-pointer shadow-lg shadow-blue-900/40"
-            title="Abrir factura de pago oficial de PayPal"
+          {/* Botón de Pago Inmediato a PayPal */}
+          <button
+            onClick={() => {
+              audioEngine.playBeep(2100, 0.04);
+              openPayPalImmediate(undefined, 5.0);
+              showOverlay(`ABRIENDO PAYPAL (${PAYPAL_PRIMARY_EMAIL})`);
+            }}
+            className="py-1.5 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black transition-all text-[11px] flex items-center gap-1.5 cursor-pointer shadow-lg shadow-blue-900/50 border border-blue-400/40 active:scale-95"
+            title={`Abrir inmediatamente PayPal para enviar el pago a ${PAYPAL_PRIMARY_EMAIL}`}
           >
-            💳 Pagar PayPal
-          </a>
+            <span>💳 Pagar a Mi PayPal</span>
+          </button>
+
+          {/* Botón de Tienda de Cosas de Pago & Desbloqueo con Código */}
+          <button
+            onClick={() => {
+              audioEngine.playBeep(2300, 0.04);
+              setIsPaidStoreOpen(true);
+            }}
+            className="py-1.5 px-3 rounded-lg bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:brightness-110 text-black font-black transition-all text-[11px] flex items-center gap-1.5 cursor-pointer shadow-lg shadow-amber-500/30 border border-yellow-300 active:scale-95 animate-pulse"
+            title="Ver artículos de pago real y códigos de activación"
+          >
+            <span>👑 Cosas de Pago</span>
+          </button>
         </div>
       </header>
 
@@ -929,7 +963,11 @@ export default function App() {
       </div>
 
       {/* DJ Soundboard Launchpad */}
-      <DjSoundboard onTrigger={(fx) => showOverlay(fx)} />
+      <DjSoundboard
+        onTrigger={(fx) => showOverlay(fx)}
+        unlockedItems={unlockedItems}
+        onOpenPaidStore={() => setIsPaidStoreOpen(true)}
+      />
 
       {/* Custom DJ Banner */}
       <div className="rot text-neutral-400 text-xs font-bold tracking-wider my-1">
@@ -947,6 +985,7 @@ export default function App() {
         onNextColor={handleNextColor}
         onOpenOptions={() => setIsOptionsOpen(true)}
         onOpenVip={() => setIsVipOpen(true)}
+        onOpenPaidStore={() => setIsPaidStoreOpen(true)}
       />
 
       {/* Chuchero Speaker Box, Muro de 5 y Cajón de Bajos */}
@@ -955,6 +994,8 @@ export default function App() {
         size={speakerSize}
         color={currentSpeakerColor}
         isVip={isVip}
+        isDoubleUnlocked={isDoubleUnlocked}
+        onRequestUnlockDouble={() => setIsDoubleModalOpen(true)}
         onOpenVipModal={() => setIsVipOpen(true)}
         onSelectSetup={handleSelectSetup}
       />
@@ -969,6 +1010,7 @@ export default function App() {
         onOpenDonationConfig={() => setIsDonationOpen(true)}
         onOpenApk={() => setIsApkModalOpen(true)}
         paymentConfig={paymentConfig}
+        onOpenPaidStore={() => setIsPaidStoreOpen(true)}
       />
 
       {/* Options Modal */}
@@ -1006,6 +1048,11 @@ export default function App() {
         }}
         soundSetup={soundSetup}
         onSelectSetup={handleSelectSetup}
+        isDoubleUnlocked={isDoubleUnlocked}
+        onRequestUnlockDouble={() => {
+          setIsVipOpen(false);
+          setIsDoubleModalOpen(true);
+        }}
         currentModelId={currentModelId}
         onSelectModel={(mid) => {
           setCurrentModelId(mid);
@@ -1018,12 +1065,46 @@ export default function App() {
         }}
         isVip={isVip}
         onToggleVip={handleToggleVip}
+        onOpenPaidStore={() => {
+          setIsVipOpen(false);
+          setIsPaidStoreOpen(true);
+        }}
         onPlaySynthTest={() => {
           setFolderIndex(1);
           setTrackIndex(0);
           playTrack(1, 0);
           setIsVipOpen(false);
         }}
+      />
+
+      {/* Tienda de Cosas de Pago & Desbloqueo por Código / PayPal Real */}
+      <PaidStoreModal
+        isOpen={isPaidStoreOpen}
+        onClose={() => setIsPaidStoreOpen(false)}
+        unlockedItemIds={unlockedItems}
+        onUpdateUnlocked={(next) => {
+          setUnlockedItems(next);
+          // Si desbloquea el pase VIP o all_access, activar isVip también
+          if (next.includes('vip_pass_16v') || next.includes('combo_all_access')) {
+            handleToggleVip(true);
+          }
+        }}
+        onOverlayMsg={showOverlay}
+      />
+
+      {/* Modal Específico para Desbloquear los 2 Chucheros ($1.11 USD / Código 2020) */}
+      <DoubleChucheroModal
+        isOpen={isDoubleModalOpen}
+        onClose={() => setIsDoubleModalOpen(false)}
+        onUnlocked={() => {
+          setUnlockedItems(getUnlockedItems());
+          setSoundSetup('double');
+          try {
+            localStorage.setItem('musicologos_sound_setup', 'double');
+          } catch {}
+          showOverlay('2 CHUCHEROS ACTIVOS');
+        }}
+        onOverlayMsg={showOverlay}
       />
 
       {/* Music Selector Modal */}

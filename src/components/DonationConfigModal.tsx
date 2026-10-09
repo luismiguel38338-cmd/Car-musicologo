@@ -32,7 +32,7 @@ export const DonationConfigModal = ({
 
   const handleOpenPayPal = (amount: string) => {
     audioEngine.playBeep(2100, 0.04);
-    let target = config.paypalUrl?.trim() || 'https://www.paypal.com/invoice/p/#GZ9P8RYCZX64484J';
+    let target = config.paypalUrl?.trim() || 'https://www.paypal.com/paypalme/negrito08m';
     if (!target.startsWith('http')) {
       target = `https://${target}`;
     }
